@@ -33,7 +33,11 @@ router.post("/login", async (req, res, next) => {
     const { email, password } = req.body;
     const user = await User.findOne({ email });
 
-    if (!user || !(await bcrypt.compare(password, user.password))) {
+    const isPasswordCorrect = user
+      ? await bcrypt.compare(password, user.password)
+      : false;
+
+    if (!user || !isPasswordCorrect) {
       return res.status(401).json({ message: "Email or password is wrong" });
     }
 
