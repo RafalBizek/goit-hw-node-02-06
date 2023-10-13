@@ -1,3 +1,4 @@
+const { v4: uuidv4 } = require("uuid");
 const mongoose = require("mongoose");
 const { Schema } = mongoose;
 const gravatar = require("gravatar");
@@ -26,6 +27,14 @@ const userSchema = new Schema({
     default: function () {
       return gravatar.url(this.email, { s: "250", r: "pg", d: "404" });
     },
+  },
+  verify: {
+    type: Boolean,
+    default: false,
+  },
+  verificationToken: {
+    type: String,
+    default: () => uuidv4(),
   },
 });
 
