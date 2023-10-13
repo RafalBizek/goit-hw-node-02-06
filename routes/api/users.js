@@ -40,7 +40,6 @@ router.post("/signup", async (req, res, next) => {
       password: hashedPassword,
       avatarURL,
       verificationToken,
-      verify: false,
     });
 
     const msg = {
@@ -51,18 +50,28 @@ router.post("/signup", async (req, res, next) => {
       html: `<strong>Click the link to verify your email:</strong> <a href="${process.env.BASE_URL}/users/verify/${verificationToken}">Verify</a>`,
     };
 
-    sgMail.send(msg);
-
-    const token = jwt.sign({ id: user._id }, "secret-key", { expiresIn: "1h" });
-    await User.findByIdAndUpdate(user._id, { token });
-
-    return res.status(201).json({
-      user: {
-        email: user.email,
-        subscription: user.subscription,
-        avatarURL: user.avatarURL,
-      },
-    });
+    // Wysyłanie e-maila
+    sgMail
+      .send(msg)
+      .then(() => {
+        const token = jwt.sign({ id: user._id }, "secret-key", {
+          expiresIn: "1h",
+        });
+        User.findByIdAndUpdate(user._id, { token });
+        res.status(201).json({
+          user: {
+            email: user.email,
+            subscription: user.subscription,
+            avatarURL: user.avatarURL,
+          },
+        });
+      })
+      .catch((error) => {
+        console.error("Error sending email:", error);
+        // Usuń użytkownika, jeśli nie można wysłać e-maila
+        User.findByIdAndDelete(user._id);
+        res.status(500).json({ message: "Error sending verification email" });
+      });
   } catch (error) {
     next(error);
   }
