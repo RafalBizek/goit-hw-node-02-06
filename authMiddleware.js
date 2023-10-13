@@ -13,6 +13,10 @@ module.exports = async (req, res, next) => {
       return res.status(401).json({ message: "Not authorized" });
     }
 
+    if (!user.verify) {
+      return res.status(401).json({ message: "Email not verified" });
+    }
+
     req.user = user;
     next();
   } catch (error) {
